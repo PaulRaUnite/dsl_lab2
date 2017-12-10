@@ -153,7 +153,7 @@ C —> ...
 #### Removing of left recursion
 
 1. order non-terminals from 0 to n;
-1. removing of indirect: for productions from 0 to n, if rule of `A` has non-terminal `B`, which less by the order than `A`, replace it by `B` rules;
+1. removing of indirect: for productions from 0 to n, if rule of `A` has non-terminal `B`, which less by the order than `A`, at the first position, replace it by `B` rules;
 1. removing of direct: for all non-terminals of form <code>A —> A&alpha;<sub>1</sub>...A&alpha;<sub>k</sub>|&beta;<sub>1</sub>...&beta;<sub>n</sub></code>, remove rules starting with `A` and add rules <code>A —> &beta;<sub>1</sub>A'...&beta;<sub>k</sub>A'|&beta;<sub>1</sub>...&beta;<sub>n</sub></code> as well as <code>A' —> &alpha;<sub>1</sub>A'...&alpha;<sub>k</sub>A'|&alpha;<sub>1</sub>...&alpha;<sub>n</sub></code>.
 
 #### Left factorization
