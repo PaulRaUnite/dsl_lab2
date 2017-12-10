@@ -31,7 +31,7 @@ The application was tested by 3 grammars and related test cases:
 
 - [simple HTML](./test1), [words](./samples1);
 - [arithmetic operations](./test2), [words](./samples2);
-- [positive integers](./test3), [words](./samples3).
+- [positive integers](./test3), [words](./samples3)(this one executed really slow).
 
 The application requires file of grammar and its file of words.
 

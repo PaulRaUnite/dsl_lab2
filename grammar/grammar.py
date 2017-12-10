@@ -740,20 +740,37 @@ class Grammar:
 
     def recursive_descent_parsing(self, word: str, predicted: Derivation,
                                   first: Dict[Tuple[NonTerminal, chr], Set[Derivation]]) -> bool:
+        """
+        Determines can the word be constructed by the rules of the grammar.
+
+        :param word: checked word.
+        :param predicted: prediction word, can consist of non-terminals.
+        :param first: FIRST dictionary, used for prediction.
+        :return: bool
+        """
+        # Pre-computations.
         len_word = len(word)
         len_predict = len(predicted)
 
         if len_predict == 0:
+            # if prediction and word empty
             if len_word == 0:
                 return True
+            # if prediction empty and
+            #  word not: it's error.
             else:
                 return False
+        # For every symbols of predicted
+        # word and checked word.
         for i in range(0, len_predict):
             symb = predicted[i]
             word_first = word[i:i + 1]
+
+            # If it's non-terminal symbol
+            # we should find variant to
+            # construct the word.
             if type(symb) == NonTerminal:
-                if symb not in self.__rules:
-                    return False
+                # Try to predict rules.
                 pair = (symb, word_first)
                 prediction = empty_set
                 if pair in first:
@@ -761,16 +778,21 @@ class Grammar:
                     for derivation in prediction:
                         if self.recursive_descent_parsing(word[i:], derivation + predicted[i + 1:], first):
                             return True
+                # Brute force.
                 for derivation in self.__rules[symb]:
                     if derivation not in prediction:
                         if self.recursive_descent_parsing(word[i:], derivation + predicted[i + 1:], first):
                             return True
+                # If nothing work.
                 return False
             else:
                 if i >= len_word:
                     return False
                 if symb != word_first:
                     return False
+
+        # If after everything
+        # len of words not equal.
         if len_predict != len_word:
             return False
         return True
@@ -778,6 +800,7 @@ class Grammar:
     def check_word(self, word: str, first: First = None) -> bool:
         """
         Returns is the grammar contains such word or not.
+
         :param word: word for check.
         :param first: mapping of non-terminal and symbol to that
         non-terminal symbol rules where the symbol occurs at the

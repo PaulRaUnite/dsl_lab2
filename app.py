@@ -13,7 +13,7 @@ def main():
         g = parse_grammar(grammar_file)
         print("Initial grammar.")
         print(g)
-        print("After preparations.")
+        print("Preparations.")
         g = g.prepare_for_checking()
         print(g)
         passed = True
@@ -29,12 +29,12 @@ def main():
                 mode = False
                 continue
             if mode is None:
-                raise Exception("test file must have verity declaration at its beginning")
+                raise Exception("Test file must have verity declaration at its beginning")
             if g.check_word(line, first) != mode:
                 passed = False
                 print(not mode, line)
         if passed:
-            print("all cases passed")
+            print("All cases passed")
 
 
 main()

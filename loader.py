@@ -25,10 +25,10 @@ def parse_grammar(file: IO) -> grammar.Grammar:
     for line in file.readlines():
         pieces = line.replace('\n', '').split("::=")
         if len(pieces) != 2:
-            raise ParsingError
+            raise ParsingError("Production must be of the form of ntem::=rule|...|rule.")
         nterm_raw = pieces[0].rstrip().lstrip()
         if len(nterm_raw) == 0 or nterm_raw[0] != '<' or nterm_raw[-1] != '>':
-            raise ParsingError
+            raise ParsingError("Non-terminal symbol must be of the form <string>.")
         str_nterm = nterm_raw[1:-1]
         nterm = map_nterm(str_nterm, nterm_seq)
 
@@ -40,8 +40,6 @@ def parse_grammar(file: IO) -> grammar.Grammar:
             escaped = False
             for symb in rule:
                 if nterm_flag:
-                    if escaped:
-                        raise ParsingError
                     if symb == '<':
                         raise ParsingError
                     elif symb == '>':
@@ -52,19 +50,24 @@ def parse_grammar(file: IO) -> grammar.Grammar:
                         nbody += symb
                 else:
                     if escaped:
-                        if symb not in {'<', '>', '|'}:
-                            raise ParsingError
+                        if symb not in {'<', '>', '|', '\\'}:
+                            raise ParsingError("Only '<', '>', '|', '\\' can be escaped.")
                         derivation += (symb,)
                         escaped = False
                         continue
                     if symb == '<':
                         nterm_flag = True
                     elif symb == '>':
-                        raise ParsingError
+                        raise ParsingError("'>' symbol must end '<', not vice versa.")
                     elif symb == '\\':
                         escaped = True
                     else:
                         derivation += (symb,)
+
+            if escaped:
+                raise ParsingError("Escape symbol must end with something.")
+            if nterm_flag:
+                raise ParsingError("Non-terminal symbol must ends with >.")
             g.add_rule(nterm, derivation)
 
     return g
