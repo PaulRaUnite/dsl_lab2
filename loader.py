@@ -1,4 +1,6 @@
-from typing import List, IO
+from typing import List, IO, Dict, Iterator
+
+import itertools
 
 import grammar
 
@@ -9,6 +11,17 @@ class ParsingError(Exception):
 
 def parse_grammar(file: IO) -> grammar.Grammar:
     g = grammar.Grammar()
+    str_nterm_map: Dict[str, int] = dict()
+    nterm_seq = itertools.count(0)
+
+    def map_nterm(s: str, sequence: Iterator) -> grammar.NonTerminal:
+        if s in str_nterm_map:
+            return str_nterm_map[s]
+        else:
+            nterm = next(sequence)
+            str_nterm_map[s] = nterm
+            return nterm
+
     for line in file.readlines():
         pieces = line.replace('\n', '').split("::=")
         if len(pieces) != 2:
@@ -16,7 +29,9 @@ def parse_grammar(file: IO) -> grammar.Grammar:
         nterm_raw = pieces[0].rstrip().lstrip()
         if len(nterm_raw) == 0 or nterm_raw[0] != '<' or nterm_raw[-1] != '>':
             raise ParsingError
-        nterm = int(nterm_raw[1:-1])
+        str_nterm = nterm_raw[1:-1]
+        nterm = map_nterm(str_nterm, nterm_seq)
+
         rules = pieces[1].split('|')
         for rule in rules:
             derivation = tuple()
@@ -31,7 +46,7 @@ def parse_grammar(file: IO) -> grammar.Grammar:
                         raise ParsingError
                     elif symb == '>':
                         nterm_flag = False
-                        derivation += (int(nbody),)
+                        derivation += (map_nterm(nbody, nterm_seq),)
                         nbody = ""
                     else:
                         nbody += symb

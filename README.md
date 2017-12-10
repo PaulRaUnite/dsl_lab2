@@ -37,6 +37,8 @@ The application requires file of grammar and its file of words.
 
 The format is similar to BFN(`<>` describes non-terminal, `::=` separates non-terminal from its rules), except terminals are not written in quotes(') and there is limitation of using escaped symbols (for example, newline symbol separates production set one from another). But you can use escaped `\<`, `\>`, `\|` to present the symbols of `<`, `>` and `|` in your grammars (see HTML example).
 
+As non-terminals you can use any strings, but for application representation they will be transformed into integers in the order they was met by grammar "parser".
+
 Examples of grammars listed above.
 
 ### Word format
