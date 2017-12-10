@@ -12,6 +12,9 @@ EmptyWord = tuple()
 Rule = Tuple[NonTerminal, Derivation]
 RawRules = Dict[NonTerminal, Set[Derivation]]
 
+First = Dict[Tuple[NonTerminal, chr], Set[Derivation]]
+empty_set = set()
+
 
 def nt_format(x: NonTerminal) -> str:
     """
@@ -518,6 +521,26 @@ class Grammar:
         return False
 
     def _remove_left_recursion(self) -> 'Grammar':
+        """
+        Removes left-recursion in the grammar
+
+        Indirect left-recursion:
+        A --> Bab|b|c
+        B --> Aa|d|e
+
+        A --> Aaab|dab|eab|b|c
+        B --> Aa|d|e
+
+        Direct left-recursion:
+        A --> Aas|Ab|a|b
+
+        A --> aA'|bA'|a|b
+        A'--> asA'|bA'|as|b
+
+        Detailed description below.
+
+        :return: Grammar
+        """
         order: Dict[NonTerminal, int] = dict()
         i = 0
         # Naive ordering.
@@ -566,7 +589,7 @@ class Grammar:
             # non-terminal A', and transform
             # grammar into:
             # A  --> beta|betaA'
-            # A' --> alphaA'
+            # A' --> alpha|alphaA'
             # as you can see, where is no
             # left-recursion A --> A.
             alphas: List[Derivation] = list()
@@ -685,39 +708,82 @@ class Grammar:
                 g.__inital = new_start
         else:
             print("Factorization performing.")
+            # Don't know why, but can
+            # spoil grammar after removing
+            # of left-recursion.
             g = g._factorize()
         return g._remove_useless()
 
-    def recursive_descent_parsing(self, word: str, predicted: Derivation) -> bool:
+    def build_first(self) -> First:
+        """
+        Builds mapping of non-terminal ans symbols of rules to that rules.
+
+        :return: dict
+        """
+        d = dict()
+        for nterm, deriv in self:
+            if len(deriv) > 0 and type(deriv[0]) == NonTerminal:
+                continue
+
+            if len(deriv) == 0:
+                symb = ''
+            else:
+                symb = deriv[0]
+            t = (nterm, symb)
+            if t not in d:
+                s = set()
+                d[t] = s
+            else:
+                s = d[t]
+            s.add(deriv)
+        return d
+
+    def recursive_descent_parsing(self, word: str, predicted: Derivation,
+                                  first: Dict[Tuple[NonTerminal, chr], Set[Derivation]]) -> bool:
         len_word = len(word)
         len_predict = len(predicted)
 
-        if len_word == 0 and len_predict == 0:
-            return True
-        elif len_word > 0 and len_predict == 0:
-            return False
+        if len_predict == 0:
+            if len_word == 0:
+                return True
+            else:
+                return False
         for i in range(0, len_predict):
             symb = predicted[i]
+            word_first = word[i:i + 1]
             if type(symb) == NonTerminal:
                 if symb not in self.__rules:
                     return False
+                pair = (symb, word_first)
+                prediction = empty_set
+                if pair in first:
+                    prediction = first[pair]
+                    for derivation in prediction:
+                        if self.recursive_descent_parsing(word[i:], derivation + predicted[i + 1:], first):
+                            return True
                 for derivation in self.__rules[symb]:
-                    if self.recursive_descent_parsing(word[i:], derivation + predicted[i + 1:]):
-                        return True
+                    if derivation not in prediction:
+                        if self.recursive_descent_parsing(word[i:], derivation + predicted[i + 1:], first):
+                            return True
                 return False
             else:
                 if i >= len_word:
                     return False
-                if symb != word[i]:
+                if symb != word_first:
                     return False
         if len_predict != len_word:
             return False
         return True
 
-    def check_word(self, word: str) -> bool:
+    def check_word(self, word: str, first: First = None) -> bool:
         """
         Returns is the grammar contains such word or not.
         :param word: word for check.
+        :param first: mapping of non-terminal and symbol to that
+        non-terminal symbol rules where the symbol occurs at the
+        first position. It's predictive element of the algorithm.
         :return: bool
         """
-        return self.recursive_descent_parsing(word, (self.__inital,))
+        if first is None:
+            first = self.build_first()
+        return self.recursive_descent_parsing(word, (self.__inital,), first)

@@ -18,6 +18,7 @@ def main():
         print(g)
         passed = True
         test_file = open(testname)
+        first = g.build_first()
         mode: bool = None
         for raw_line in test_file.readlines():
             line = raw_line.replace('\n', '')
@@ -29,11 +30,11 @@ def main():
                 continue
             if mode is None:
                 raise Exception("test file must have verity declaration at its beginning")
-            if g.check_word(line) != mode:
+            if g.check_word(line, first) != mode:
                 passed = False
                 print(not mode, line)
         if passed:
             print("all cases passed")
 
-main()
 
+main()
