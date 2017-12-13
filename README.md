@@ -21,7 +21,7 @@ Additional:
 
 Clone/download the repository and execute `python app.py`.
 
-Use `python3`(the project was tested by `python3.6`), because the whole project uses it features(type hints, print, next and etc built-in functions(!)).
+Use `python3.6`, because the whole project uses it features(type hints(!), print, next and etc built-in functions).
 
 It imports only standard libraries and local grammar library, no external dependencies.
 
